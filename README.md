@@ -123,9 +123,9 @@ file_system_id=$(aws efs create-file-system \
     --output text)
 
 subnets=$(aws ec2 describe-subnets \
-    --filters "Name=vpc-id,Values=$vpc_id" \
-    --query 'Subnets[*].{SubnetId: SubnetId,AvailabilityZone: AvailabilityZone,CidrBlock: CidrBlock}' \
-    | jq --raw-output '.Subnets[].SubnetId')
+            --filters "Name=vpc-id,Values=$vpc_id" \
+            --query 'Subnets[*].{SubnetId: SubnetId,AvailabilityZone: AvailabilityZone,CidrBlock: CidrBlock}' \
+            | jq -r '. | .[] | .SubnetId')
 
 for subnet in ${subnets[@]}
 do
