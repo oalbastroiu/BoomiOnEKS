@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: molecule
+  labels:
+    app: molecule
+spec:
+  selector:
+    matchLabels:
+      app: molecule
+  serviceName: "molecule-service"
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: molecule
+    spec:
+      terminationGracePeriodSeconds: 900
+      volumes:
+        - name: molecule-storage
+          persistentVolumeClaim:
+            claimName: nfs-claim
+      securityContext:
+        fsGroup: 1000
+      initContainers:
+      - name: volume-mount-set-perm
+        image: busybox
+        command: ["sh", "-c", "chmod 777 /mnt/boomi"]
+        volumeMounts:
+          - name: molecule-storage
+            mountPath: "/mnt/boomi"
+      containers:
+      - image: boomi/molecule:release # Change image to boomi/cloud:release for Boomi Cloud
+        imagePullPolicy: Always
+        name: atom-node
+        ports:
+        - containerPort: 9090
+          protocol: TCP
+        resources:
+          limits:
+            cpu: "1000m"
+            memory: "1536Mi"
+          requests:
+            cpu: "500m"
+            memory: "1024Mi"
+        volumeMounts:
+          - name: molecule-storage
+            mountPath: "/mnt/boomi"
+        readinessProbe:
+          periodSeconds: 10
+          initialDelaySeconds: 10
+          httpGet:
+            path: /_admin/readiness
+            port: 9090
+        livenessProbe:
+          periodSeconds: 60
+          httpGet:
+            path: /_admin/liveness
+            port: 9090
+        env:
+        - name: BOOMI_ATOMNAME
+          value: "boomi-molecule-eks"
+        - name: ATOM_LOCALHOSTID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: BOOMI_ACCOUNTID
+          valueFrom:
+            secretKeyRef:
+              name: boomi-secret
+              key: account
+        - name: BOOMI_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: boomi-secret
+              key: username
+        - name: BOOMI_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: boomi-secret
+              key: password

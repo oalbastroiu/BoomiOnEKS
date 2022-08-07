@@ -1,0 +1,68 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: boomi-aws
+  region: us-east-1
+  version: "1.22"
+
+vpc:
+  cidr: 10.100.0.0/16
+
+# cluster AZs must be set explicitly for StatefulSet nodegroup per AWS AZ requirement
+availabilityZones: ["us-east-1a", "us-east-1b", "us-east-1c"]
+
+
+#Uncomment this if you want to activate logging
+# cloudWatch:
+#   clusterLogging:
+#     # all supported types: "api", "audit", "authenticator", "controllerManager", "scheduler"
+#     enableTypes: ["all"]
+
+managedNodeGroups:
+  - name: us-east-1a
+    minSize: 1
+    maxSize: 100
+    desiredCapacity: 1
+    volumeSize: 20
+    # scope node to single AZ, best practice for StatefulSet deployment.
+    availabilityZones: ["us-east-1a"]
+    privateNetworking: true
+    # ssh:  # use existing EC2 key.
+    #   publicKeyName: <my_ssh_key_in_aws>
+    iam:
+      withAddonPolicies:
+        autoScaler: true
+        cloudWatch: true
+        efs: true
+
+
+  - name: us-east-1b
+    minSize: 1
+    maxSize: 100
+    desiredCapacity: 1
+    volumeSize: 20
+    availabilityZones: ["us-east-1b"]
+    privateNetworking: true
+    # ssh:
+    #   publicKeyName: <my_ssh_key_in_aws>
+    iam:
+      withAddonPolicies:
+        autoScaler: true
+        cloudWatch: true
+        efs: true
+
+  - name: us-east-1c
+    minSize: 1
+    maxSize: 100
+    desiredCapacity: 1
+    volumeSize: 20
+    availabilityZones: ["us-east-1c"]
+    privateNetworking: true
+    # ssh:
+    #   publicKeyName: <my_ssh_key_in_aws>
+    iam:
+      withAddonPolicies:
+        autoScaler: true
+        cloudWatch: true
+        efs: true

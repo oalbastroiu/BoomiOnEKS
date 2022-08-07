@@ -1,0 +1,23 @@
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: molecule-hpa
+  labels:
+    app: molecule
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1beta1
+    kind: StatefulSet
+    name: molecule
+  minReplicas: 3
+  maxReplicas: 200
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 60
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 60
